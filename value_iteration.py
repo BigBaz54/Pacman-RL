@@ -11,7 +11,7 @@ class ValueIteration:
     def parse_settings_file(self, path_to_settings):
         """
         Parses the settings file and create a GameEnv object.
-        :param path_to_settings: str, path to the settings file (str)
+        :param path_to_settings: path to the settings file (str)
         :return: GameEnv object, gamma, epsilon
         """
         with open(path_to_settings, 'r') as f:
@@ -25,14 +25,19 @@ class ValueIteration:
         return env, gamma, epsilon
 
 
-    def value_iteration(self):
+    def value_iteration(self, trace=False, verbose=False):
         """
         Runs the value iteration algorithm and stores the values for each state in self.values.
+        :param trace: (bool) if True, write the values to the file 'log-file_VI.txt' after each iteration
         """
+        c = 0
+        delta = 0
         while True:
-            print('Values:')
-            self.print_values()
-            print('\n')
+            if trace:
+                self.trace_values(c, delta)
+            if verbose:
+                self.print_values(c, delta)
+            c += 1
             delta = 0
             old_values = self.values.copy()
             for state in range(self.game_env.num_cols * self.game_env.num_rows):
@@ -46,10 +51,14 @@ class ValueIteration:
                 self.values[state] = max_v
                 delta += abs(old_values[state] - self.values[state])
             if delta < self.epsilon * (1 - self.gamma) / self.gamma:
+                if trace:
+                    self.trace_values(c, delta)
+                if verbose:
+                    self.print_values(c, delta)
                 break
 
 
-    def compute_policy(self):
+    def compute_policy(self, trace=False, verbose=False):
         """
         Computes the policy for each state according to the computed values and stores it in self.policy.
         """
@@ -63,45 +72,92 @@ class ValueIteration:
                 if action_v > max_v:
                     max_v = action_v
                     self.policy[state] = action
+        if trace:
+            self.trace_policy()
+        if verbose:
+            self.print_policy()
 
 
     def print_policy(self):
         """
         Print the policy to the console.
         """
+        print('\n' + '=' * 30 + '\n')
+        print('Optimal policy\n')
         for i in range(self.game_env.num_rows):
             for j in range(self.game_env.num_cols):
                 if self.game_env.grid[i][j] == 3:
                     print('#', end=' ')
                 elif self.policy[self.game_env.position_to_state((i, j))] == 'up':
-                    print('^', end=' ')
+                    print('↑', end=' ')
                 elif self.policy[self.game_env.position_to_state((i, j))] == 'down':
-                    print('v', end=' ')
+                    print('↓', end=' ')
                 elif self.policy[self.game_env.position_to_state((i, j))] == 'left':
-                    print('<', end=' ')
+                    print('←', end=' ')
                 elif self.policy[self.game_env.position_to_state((i, j))] == 'right':
-                    print('>', end=' ')
+                    print('→', end=' ')
                 else:
                     raise ValueError('Invalid action')
             print()
         print()
 
 
-    def print_values(self):
+    def print_values(self, c, delta):
         """
         Print the values to the console.
+        :param c: (int) iteration number
+        :param delta: (float) difference between the old and new values
         """
+        print('\n' + '=' * 30 + '\n')
+        print(f'Iteration {c}\n')
         for i in range(self.game_env.num_rows):
             for j in range(self.game_env.num_cols):
-                print(f"{self.values[i * self.game_env.num_cols + j]:.2f}", end=' ')
+                print(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}", end=' ')
             print()
-        print()
+        print(f'\nDelta: {delta:.8f}')
+
+
+    def trace_values(self, c, delta):
+        """
+        Write the values to the file 'log-file_VI.txt'.
+        :param c: (int) iteration number
+        :param delta: (float) difference between the old and new values
+        """
+        with open('log-file_VI.txt', 'a') as f:
+            f.write('\n' + '=' * 30 + '\n\n')
+            f.write(f'Iteration {c}\n\n')
+            for i in range(self.game_env.num_rows):
+                for j in range(self.game_env.num_cols):
+                    f.write(f"{self.values[i * self.game_env.num_cols + j]:^6.2f} ")
+                f.write('\n')
+            f.write(f'\nDelta: {delta:.8f}\n')
+
+
+    def trace_policy(self):
+        """
+        Write the policy to the file 'log-file_VI.txt'.
+        """
+        with open('log-file_VI.txt', 'a', encoding='utf-8') as f:
+            f.write('\n' + '=' * 30 + '\n\n')
+            f.write('Optimal policy\n\n')
+            for i in range(self.game_env.num_rows):
+                for j in range(self.game_env.num_cols):
+                    if self.game_env.grid[i][j] == 3:
+                        f.write('# ')
+                    elif self.policy[self.game_env.position_to_state((i, j))] == 'up':
+                        f.write('↑ ')
+                    elif self.policy[self.game_env.position_to_state((i, j))] == 'down':
+                        f.write('↓ ')
+                    elif self.policy[self.game_env.position_to_state((i, j))] == 'left':
+                        f.write('← ')
+                    elif self.policy[self.game_env.position_to_state((i, j))] == 'right':
+                        f.write('→ ')
+                    else:
+                        raise ValueError('Invalid action')
+                f.write('\n')
 
 
 if __name__ == '__main__':
     vi = ValueIteration('value-iteration.txt')
-    vi.value_iteration()
-    vi.compute_policy()
-    vi.print_policy()
-
-
+    vi.value_iteration(verbose=True, trace=True)
+    vi.compute_policy(verbose=True, trace=True)
