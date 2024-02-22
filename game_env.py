@@ -135,6 +135,13 @@ class GameEnv:
             print()
         print()
 
+    
+    def reset(self):
+        """
+        Reset the game to the initial state.
+        """
+        self.state = (self.num_rows - 1) * self.num_cols
+
 
     def test_env(self):
         """
@@ -162,7 +169,7 @@ class GameEnv:
             elif action == 'c':
                 break
             elif action == 'r':
-                self.state = (self.num_rows - 1) * self.num_cols
+                self.reset()
             elif action == 'a':
                 print("Possible actions:")
                 for a in ['up', 'down', 'left', 'right']:
