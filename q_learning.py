@@ -4,11 +4,12 @@ import random
 
 class QLearning():
     def __init__(self, path_to_settings, epsilon=1, eps_decay=0.99):
-        self.game_env, self.gamma, self.alpha, self.nb_episodes = self.parse_settings_file(path_to_settings)
+        self.game_env, self.gamma, self.start_alpha, self.nb_episodes = self.parse_settings_file(path_to_settings)
         self.epsilon = epsilon
         self.eps_decay = eps_decay
         self.q_values = {state: {'up': 0, 'down': 0, 'left': 0, 'right': 0} for state in range(self.game_env.num_cols * self.game_env.num_rows)}
         self.policy = {state: '' for state in range(self.game_env.num_cols * self.game_env.num_rows)}
+        self.freq = {state: {'up': 0, 'down': 0, 'left': 0, 'right': 0} for state in range(self.game_env.num_cols * self.game_env.num_rows)}
 
 
     def parse_settings_file(self, path_to_settings):
@@ -42,6 +43,16 @@ class QLearning():
             return self.policy[state]
 
 
+    def get_alpha(self, state, action):
+        """
+        Get the alpha value for the given state-action pair.
+        :param state: current state (int)
+        :param action: action taken (str)
+        :return: alpha value (float)
+        """
+        return self.start_alpha / self.freq[state][action]
+
+
     def update_q_values(self, prev_state, action, reward, curr_state):
         """
         Update the Q-values.
@@ -50,7 +61,8 @@ class QLearning():
         :param reward: reward received (int)
         :param curr_state: current state (int)
         """
-        self.q_values[prev_state][action] = self.q_values[prev_state][action] + self.alpha * (reward + self.gamma * max(self.q_values[curr_state].values()) - self.q_values[prev_state][action])
+        self.freq[prev_state][action] += 1
+        self.q_values[prev_state][action] = self.q_values[prev_state][action] + self.get_alpha(prev_state, action) * (reward + self.gamma * max(self.q_values[curr_state].values()) - self.q_values[prev_state][action])
 
 
     def update_policy(self, state):
@@ -96,8 +108,8 @@ class QLearning():
                 if trace:
                     with open('log-file_QL.txt', 'a', encoding='utf-8') as f:
                         f.write('=' * 100 + '\n\n')
-                        f.write(f'Episode: {episode + 1}, State: {prev_state}, Action: {action}, Reward: {reward}, Next state: {curr_state}\n\n')
-                        f.write(f'Q[{prev_state}][{action}] = Q[{prev_state}][{action}] + {self.alpha} * ({reward} + {self.gamma} * max({list(self.q_values[curr_state].values())}) - {self.q_values[prev_state][action]})\n\n')
+                        f.write(f'Episode: {episode + 1}, State: {prev_state}, Action: {action}, Reward: {reward}, Next state: {curr_state}, N[{prev_state}][{action}] = {self.freq[prev_state][action]}\n\n')
+                        f.write(f'Q[{prev_state}][{action}] = Q[{prev_state}][{action}] + ({self.start_alpha} / N[{prev_state}][{action}]) * ({reward} + {self.gamma} * max({list(self.q_values[curr_state].values())}) - Q[{prev_state}][{action}])\n\n')
                         f.write('Updated Q-values:\n\n')
                         for i in range(self.game_env.num_rows):
                             for actions in [[('up', '↑'), ('down', '↓')], [('left', '←'), ('right', '→')]]:
