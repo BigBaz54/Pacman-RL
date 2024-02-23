@@ -114,6 +114,16 @@ class GameEnv:
             if r < cum:
                 return next_state
         return state
+    
+
+    def is_terminal(self, state):
+        """
+        Check if the state is terminal.
+        :param state: current state (int)
+        :return: True if the state is terminal, False otherwise (bool)
+        """
+        n, m = self.state_to_position(state)
+        return self.grid[n][m] in [1, 2]
 
 
     def print_grid(self):
