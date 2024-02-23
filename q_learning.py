@@ -64,13 +64,20 @@ class QLearning():
     def train(self, trace=False, verbose=False):
         """
         Train the agent.
-        :param trace: write the Q-values, the policy and their computations to the file 'log-file_QL.txt' (bool)
+        :param trace: write the Q-values, the policy and their computation to the file 'log-file_QL.txt' (bool)
         :param verbose: print the Q-values to the console at each episode (bool)
         """
         for episode in range(self.nb_episodes):
             self.game_env.reset()
             curr_state = self.game_env.state
             terminal = False
+            if trace:
+                with open('log-file_QL.txt', 'a', encoding='utf-8') as f:
+                    f.write('=' * 100 + '\n')
+                    f.write('=' * 100 + '\n\n')
+                    f.write(f'Episode: {episode + 1}\n\n')
+                    f.write('=' * 100 + '\n')
+                    f.write('=' * 100 + '\n\n')
             while not terminal:
                 terminal = self.game_env.is_terminal(curr_state)
                 if episode == 0:
@@ -85,8 +92,51 @@ class QLearning():
                 if verbose:
                     self.print_q_values(episode + 1, prev_state, action, reward, curr_state)
                 self.update_policy(curr_state)
+
+                if trace:
+                    with open('log-file_QL.txt', 'a', encoding='utf-8') as f:
+                        f.write('=' * 100 + '\n\n')
+                        f.write(f'Episode: {episode + 1}, State: {prev_state}, Action: {action}, Reward: {reward}, Next state: {curr_state}\n\n')
+                        f.write(f'Q[{prev_state}][{action}] = Q[{prev_state}][{action}] + {self.alpha} * ({reward} + {self.gamma} * max({list(self.q_values[curr_state].values())}) - {self.q_values[prev_state][action]})\n\n')
+                        f.write('Updated Q-values:\n\n')
+                        for i in range(self.game_env.num_rows):
+                            for actions in [[('up', '↑'), ('down', '↓')], [('left', '←'), ('right', '→')]]:
+                                for j in range(self.game_env.num_cols):
+                                    if self.game_env.grid[i][j] == 3:
+                                        f.write('#'*17 + ' ')
+                                        if j < self.game_env.num_cols - 1:
+                                            f.write('| ')
+                                    else:
+                                        for action in actions:
+                                            f.write(f'{action[1]}:{self.q_values[self.game_env.position_to_state((i, j))][action[0]]:^6.2f} ')
+                                        if j < self.game_env.num_cols - 1:
+                                            f.write('| ')
+                                f.write('\n')
+                            if i < self.game_env.num_rows - 1:
+                                f.write('-' * 19 * self.game_env.num_cols + '\n')
+                        f.write('\n')
+                
         if verbose:
             self.print_policy()
+        if trace:
+            with open('log-file_QL.txt', 'a', encoding='utf-8') as f:
+                f.write('=' * 100 + '\n\n')
+                f.write('Optimal policy\n\n')
+                for i in range(self.game_env.num_rows):
+                    for j in range(self.game_env.num_cols):
+                        if self.game_env.grid[i][j] == 3:
+                            f.write('# ')
+                        elif self.policy[self.game_env.position_to_state((i, j))] == 'up':
+                            f.write('↑ ')
+                        elif self.policy[self.game_env.position_to_state((i, j))] == 'down':
+                            f.write('↓ ')
+                        elif self.policy[self.game_env.position_to_state((i, j))] == 'left':
+                            f.write('← ')
+                        elif self.policy[self.game_env.position_to_state((i, j))] == 'right':
+                            f.write('→ ')
+                        else:
+                            raise ValueError('Invalid action')
+                    f.write('\n')
 
 
     def print_policy(self):
@@ -139,4 +189,4 @@ class QLearning():
 
 if __name__ == "__main__":
     q_learning = QLearning('Q-Learning.txt')
-    q_learning.train(verbose=True)
+    q_learning.train(trace=True)
