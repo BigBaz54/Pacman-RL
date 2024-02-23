@@ -50,12 +50,15 @@ class ValueIteration:
                     max_v = max(max_v, action_v)
                 self.values[state] = max_v
                 delta += abs(old_values[state] - self.values[state])
-            if delta < self.epsilon * (1 - self.gamma) / self.gamma:
+            if delta < self.epsilon:
                 if trace:
                     self.trace_values(c, delta)
                 if verbose:
                     self.print_values(c, delta)
                 break
+        if trace:
+            with open('log-file_VI.txt', 'a') as f:
+                f.write('\ndelta < epsilon, algorithm converged\n')
 
 
     def compute_policy(self, trace=False, verbose=False):
@@ -82,7 +85,7 @@ class ValueIteration:
         """
         Print the policy to the console.
         """
-        print('\n' + '=' * 30 + '\n')
+        print('\n' + '=' * 50 + '\n')
         print('Optimal policy\n')
         for i in range(self.game_env.num_rows):
             for j in range(self.game_env.num_cols):
@@ -108,13 +111,16 @@ class ValueIteration:
         :param c: (int) iteration number
         :param delta: (float) difference between the old and new values
         """
-        print('\n' + '=' * 30 + '\n')
+        print('\n' + '=' * 50 + '\n')
         print(f'Iteration {c}\n')
         for i in range(self.game_env.num_rows):
             for j in range(self.game_env.num_cols):
-                print(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}", end=' ')
-            print()
-        print(f'\nDelta: {delta:.8f}')
+                print(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}", end='')
+                if j < self.game_env.num_cols - 1:
+                    print('|', end='')
+            if i < self.game_env.num_rows - 1:
+                print('\n' + '-' * 7 * self.game_env.num_cols)
+        print(f'\n\ndelta: {delta:.8f}')
 
 
     def trace_values(self, c, delta):
@@ -124,13 +130,16 @@ class ValueIteration:
         :param delta: (float) difference between the old and new values
         """
         with open('log-file_VI.txt', 'a') as f:
-            f.write('\n' + '=' * 30 + '\n\n')
+            f.write('\n' + '=' * 50 + '\n\n')
             f.write(f'Iteration {c}\n\n')
             for i in range(self.game_env.num_rows):
                 for j in range(self.game_env.num_cols):
-                    f.write(f"{self.values[i * self.game_env.num_cols + j]:^6.2f} ")
-                f.write('\n')
-            f.write(f'\nDelta: {delta:.8f}\n')
+                    f.write(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}")
+                    if j < self.game_env.num_cols - 1:
+                        f.write('|')
+                if i < self.game_env.num_rows - 1:
+                    f.write('\n' + '-' * 7 * self.game_env.num_cols + '\n')
+            f.write(f'\n\ndelta: {delta:.8f}\n')
 
 
     def trace_policy(self):
@@ -138,7 +147,7 @@ class ValueIteration:
         Write the policy to the file 'log-file_VI.txt'.
         """
         with open('log-file_VI.txt', 'a', encoding='utf-8') as f:
-            f.write('\n' + '=' * 30 + '\n\n')
+            f.write('\n' + '=' * 50 + '\n\n')
             f.write('Optimal policy\n\n')
             for i in range(self.game_env.num_rows):
                 for j in range(self.game_env.num_cols):
