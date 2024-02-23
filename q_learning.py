@@ -79,12 +79,12 @@ class QLearning():
         :param trace: write the Q-values, the policy and their computation to the file 'log-file_QL.txt' (bool)
         :param verbose: print the Q-values to the console at each episode (bool)
         """
-        f = open('log-file_QL.txt', 'a', encoding='utf-8')
         for episode in range(self.nb_episodes):
             self.game_env.reset()
             curr_state = self.game_env.state
             terminal = False
             if trace:
+                f = open('log-file_QL.txt', 'a', encoding='utf-8')
                 f.write('=' * 100 + '\n')
                 f.write('=' * 100 + '\n\n')
                 f.write(f'Episode: {episode + 1}\n\n')
@@ -147,6 +147,7 @@ class QLearning():
                     else:
                         raise ValueError('Invalid action')
                 f.write('\n')
+            f.close()
 
 
     def print_policy(self):

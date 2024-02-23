@@ -31,7 +31,6 @@ class ValueIteration:
         :param trace: (bool) if True, write the values to the file 'log-file_VI.txt' after each iteration
         :param verbose: (bool) if True, print the values to the console after each iteration
         """
-        f = open('log-file_VI.txt', 'a', encoding='utf-8')
         c = 0
         delta = 0
         while True:
@@ -39,6 +38,7 @@ class ValueIteration:
             delta = 0
 
             if trace:
+                f = open('log-file_VI.txt', 'a', encoding='utf-8')
                 f.write('\n' + '=' * 50 + '\n\n')
                 f.write(f'Iteration {c}\n\n')
             if verbose:
