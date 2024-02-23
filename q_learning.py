@@ -61,9 +61,11 @@ class QLearning():
         self.policy[state] = max(self.q_values[state], key=lambda x: self.q_values[state][x])
 
 
-    def train(self):
+    def train(self, trace=False, verbose=False):
         """
         Train the agent.
+        :param trace: write the Q-values, the policy and their computations to the file 'log-file_QL.txt' (bool)
+        :param verbose: print the Q-values to the console at each episode (bool)
         """
         for episode in range(self.nb_episodes):
             self.game_env.reset()
@@ -80,7 +82,11 @@ class QLearning():
                 curr_state = self.game_env.draw_next_state(prev_state, possible_next_states)
                 reward = self.game_env.get_reward(curr_state)
                 self.update_q_values(prev_state, action, reward, curr_state)
+                if verbose:
+                    self.print_q_values(episode + 1, prev_state, action, reward, curr_state)
                 self.update_policy(curr_state)
+        if verbose:
+            self.print_policy()
 
 
     def print_policy(self):
@@ -107,11 +113,12 @@ class QLearning():
             print()
 
 
-    def print_q_values(self):
+    def print_q_values(self, episode, state, action, reward, next_state):
         """
         Print the Q-values to the console.
         """
         print('\n' + '=' * 100 + '\n')
+        print(f'Episode: {episode}, State: {state}, Action: {action}, Reward: {reward}, Next state: {next_state}\n')
         print('Q-values\n')
         for i in range(self.game_env.num_rows):
             for actions in [[('up', '↑'), ('down', '↓')], [('left', '←'), ('right', '→')]]:
@@ -132,6 +139,4 @@ class QLearning():
 
 if __name__ == "__main__":
     q_learning = QLearning('Q-Learning.txt')
-    q_learning.train()
-    q_learning.print_q_values()
-    q_learning.print_policy()
+    q_learning.train(verbose=True)
