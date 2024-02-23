@@ -33,29 +33,67 @@ class ValueIteration:
         c = 0
         delta = 0
         while True:
-            if trace:
-                self.trace_values(c, delta)
-            if verbose:
-                self.print_values(c, delta)
             c += 1
             delta = 0
+
+            if trace:
+                with open('log-file_VI.txt', 'a') as f:
+                    f.write('\n' + '=' * 50 + '\n\n')
+                    f.write(f'Iteration {c}\n\n')
+            if verbose:
+                self.print_values(c, delta)
+            
             old_values = self.values.copy()
             for state in range(self.game_env.num_cols * self.game_env.num_rows):
+
+                if trace:
+                    with open('log-file_VI.txt', 'a') as f:
+                        f.write(f'U[{state}] = max(')
+                
                 max_v = float('-inf')
                 for action in ['up', 'down', 'left', 'right']:
                     next_states = self.game_env.get_possible_next_states(state, action)
                     action_v = 0
                     for next_state, probability in next_states:
+
+                        if trace:
+                            with open('log-file_VI.txt', 'a') as f:
+                                f.write(f'{probability} * [{self.game_env.get_reward(next_state)} + {self.gamma} * {old_values[next_state]}]')
+                                if next_state != next_states[-1][0]:
+                                    f.write(' + ')
+                        
                         action_v += probability * (self.game_env.get_reward(next_state) + self.gamma * old_values[next_state])
+                    
+                    if trace:
+                        with open('log-file_VI.txt', 'a') as f:
+                            if action != 'right':
+                                f.write(', ')
+
                     max_v = max(max_v, action_v)
                 self.values[state] = max_v
-                delta += abs(old_values[state] - self.values[state])
-            if delta < self.epsilon:
+
                 if trace:
-                    self.trace_values(c, delta)
-                if verbose:
-                    self.print_values(c, delta)
+                    with open('log-file_VI.txt', 'a') as f:
+                        f.write(')\n')
+                        f.write(f'     = {max_v:.5f}\n')
+
+                delta += abs(old_values[state] - self.values[state])
+            
+            if trace:
+                with open('log-file_VI.txt', 'a') as f:
+                    f.write('\nUpdated values:\n\n')
+                    for i in range(self.game_env.num_rows):
+                        for j in range(self.game_env.num_cols):
+                            f.write(f'{self.values[i * self.game_env.num_cols + j]:^6.2f}')
+                            if j < self.game_env.num_cols - 1:
+                                f.write('|')
+                        if i < self.game_env.num_rows - 1:
+                            f.write('\n' + '-' * 7 * self.game_env.num_cols + '\n')
+                    f.write(f'\n\ndelta: {delta:.8f}\n')
+            
+            if delta < self.epsilon:
                 break
+        
         if trace:
             with open('log-file_VI.txt', 'a') as f:
                 f.write('\ndelta < epsilon, algorithm converged\n')
@@ -121,25 +159,6 @@ class ValueIteration:
             if i < self.game_env.num_rows - 1:
                 print('\n' + '-' * 7 * self.game_env.num_cols)
         print(f'\n\ndelta: {delta:.8f}')
-
-
-    def trace_values(self, c, delta):
-        """
-        Write the values to the file 'log-file_VI.txt'.
-        :param c: (int) iteration number
-        :param delta: (float) difference between the old and new values
-        """
-        with open('log-file_VI.txt', 'a') as f:
-            f.write('\n' + '=' * 50 + '\n\n')
-            f.write(f'Iteration {c}\n\n')
-            for i in range(self.game_env.num_rows):
-                for j in range(self.game_env.num_cols):
-                    f.write(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}")
-                    if j < self.game_env.num_cols - 1:
-                        f.write('|')
-                if i < self.game_env.num_rows - 1:
-                    f.write('\n' + '-' * 7 * self.game_env.num_cols + '\n')
-            f.write(f'\n\ndelta: {delta:.8f}\n')
 
 
     def trace_policy(self):
