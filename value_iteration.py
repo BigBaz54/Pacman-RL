@@ -80,7 +80,10 @@ class ValueIteration:
                 f.write('\nUpdated values:\n\n')
                 for i in range(self.game_env.num_rows):
                     for j in range(self.game_env.num_cols):
-                        f.write(f'{self.values[i * self.game_env.num_cols + j]:^6.2f}')
+                        if self.game_env.grid[i][j] == 3:
+                            f.write('#' * 6)
+                        else:
+                            f.write(f'{self.values[i * self.game_env.num_cols + j]:^6.2f}')
                         if j < self.game_env.num_cols - 1:
                             f.write('|')
                     if i < self.game_env.num_rows - 1:
@@ -151,7 +154,10 @@ class ValueIteration:
         print(f'Iteration {c}\n')
         for i in range(self.game_env.num_rows):
             for j in range(self.game_env.num_cols):
-                print(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}", end='')
+                if self.game_env.grid[i][j] == 3:
+                    print('#' * 6, end='')
+                else:
+                    print(f"{self.values[i * self.game_env.num_cols + j]:^6.2f}", end='')
                 if j < self.game_env.num_cols - 1:
                     print('|', end='')
             if i < self.game_env.num_rows - 1:
